@@ -1,0 +1,111 @@
+--POPA LARISA-ANCUTA--
+use Firma
+
+   --CERINTE LABORATOR--
+--angajatii dintr-un anumit departament (dat prin denumire) a caror nume incepe cu caracterele ‘N1’
+SELECT A.Nume, A.Prenume, D.Denumire Departament
+  FROM ANGAJATI A
+      JOIN DEPARTAMENTE D ON (A.IdDept = D.IdDept)
+  WHERE D.Denumire='PROIECTARE' AND A.Nume LIKE '%N1%'
+
+--angajatii dintr-un anumit departament (dat prin denumire) ordonati dupa salariu crescator/descrescator
+SELECT A.Nume, A.Prenume, D.Denumire Departament,F.Salariu
+  FROM ANGAJATI A
+     JOIN DEPARTAMENTE D ON A.IdDept = D.IdDept
+     JOIN FUNCTII F ON A.IdFunctie = F.IdFunctie
+  WHERE D.Denumire = 'PROIECTARE'
+  ORDER BY F.salariu DESC
+
+--cati angajati sunt intr-un anumit departament dat prin denumire
+SELECT COUNT(A.IdAngajat) NrAngajatiProiectare
+  FROM ANGAJATI A
+     JOIN DEPARTAMENTE D ON A.IdDept = D.IdDept
+  WHERE D.Denumire = 'PROIECTARE'
+
+--suma salariilor angajaților din companie
+SELECT SUM(F.Salariu) TotalSalarii
+  FROM ANGAJATI A
+     JOIN FUNCTII F ON A.IdFunctie = F.IdFunctie
+
+
+   --CERINTE TEMA--
+--angajatii a caror functii contine secventa de caractere ‘ngi'
+SELECT A.Nume, A.Prenume, F.Denumire Functie
+  FROM ANGAJATI A
+      JOIN FUNCTII F ON (A.IdFunctie = F.IdFunctie)
+  WHERE F.Denumire LIKE '%NGI%'
+
+--salariile din departamentul ‘PRODUCTIE’ si cati angajati au aceste salarii
+SELECT F.Salariu Salarii, COUNT(A.IdAngajat) NrAngajati
+  FROM ANGAJATI A
+     JOIN DEPARTAMENTE D ON A.IdDept = D.IdDept
+     JOIN FUNCTII F ON A.IdFunctie = F.IdFunctie
+  WHERE D.Denumire = 'PRODUCTIE'
+  GROUP BY F.Salariu
+
+--cele mai mici/mari salarii din departamente
+SELECT D.Denumire Departament, MIN(F.Salariu) MinSalariu, MAX(F.Salariu) MaxSalariu
+   FROM ANGAJATI A
+     JOIN DEPARTAMENTE D ON A.IdDept = D.IdDept
+     JOIN FUNCTII F ON A.IdFunctie = F.IdFunctie
+   GROUP BY D.Denumire
+
+--produsele vandute intr-o anumita perioada de timp
+SELECT P.DENUMIRE Produs, V.DataVanz 
+   FROM VANZARI V
+      JOIN PRODUSE P ON V.IDProdus=P.IdProdus
+   WHERE V.DataVanz BETWEEN '12/31/2020' AND '01/01/2022'
+   ORDER BY V.DataVanz
+
+--clienții ce au cumparat produse prin intermediul unui vanzator anume
+SELECT C.Denumire ClientAng14
+  FROM ANGAJATI A
+     JOIN VANZARI V ON A.IdAngajat=V.IDVanzator
+	 JOIN CLIENTI C ON V.IDClient=C.IdClient
+  WHERE A.IdAngajat = 14
+  GROUP BY C.Denumire
+
+--clientii ce au cumparat doua produse
+SELECT C.Denumire Client
+  FROM VANZARI V
+	 JOIN CLIENTI C ON V.IDClient=C.IdClient
+  GROUP BY C.Denumire
+  HAVING SUM(V.NrProduse)=2
+
+--clientii ce au cumparat cel putin doua produse
+SELECT C.Denumire Client
+  FROM VANZARI V
+	 JOIN CLIENTI C ON V.IDClient=C.IdClient
+  GROUP BY C.Denumire
+  HAVING SUM(V.NrProduse)>2
+
+--cati clienti au cumparat (la o singura cumparare) produse in valoare mai mare decat o suma data (de ex. 200)
+SELECT COUNT(C.IdClient) NrClienti
+  FROM VANZARI V
+	JOIN CLIENTI C ON V.IDClient=C.IdClient
+  WHERE V.NrProduse*V.PretVanz>200
+
+--clientii din CLUJ care au cumparat produse in valoare mai mare de 200
+SELECT C.Denumire ClientCluj
+  FROM VANZARI V
+	JOIN CLIENTI C ON V.IDClient=C.IdClient
+  WHERE V.NrProduse*V.PretVanz>200 AND C.Adresa_jud='CLUJ'
+
+--mediile vanzarilor pe o anumita perioada de timp, grupate pe produse
+SELECT P.Denumire Produs,AVG(V.NrProduse) MedieProd
+   FROM VANZARI V
+      JOIN PRODUSE P ON V.IDProdus=P.IdProdus
+   WHERE V.DataVanz BETWEEN '12/31/2017' AND '01/01/2019'
+   GROUP BY P.Denumire
+
+--numarul total de produse vandute pe o anumita perioada de timp
+SELECT SUM(V.NrProduse) NrTotalProd
+   FROM VANZARI V
+      JOIN PRODUSE P ON V.IDProdus=P.IdProdus
+   WHERE V.DataVanz BETWEEN '12/31/2020' AND '01/01/2022'
+
+--numarul total de produse vandute de un vanzator precizat prin nume
+SELECT SUM(V.NrProduse) NrProduseN13P9
+  FROM ANGAJATI A
+     JOIN VANZARI V ON A.IdAngajat=V.IDVanzator
+  WHERE A.Nume = 'N13' AND A.Prenume = 'P9'

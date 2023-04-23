@@ -1,0 +1,78 @@
+--TEMA POPA LARISA-ANCUTA 
+USE FIRMA
+
+--CAMP NOU IN TABELA PRODUSE
+ALTER TABLE PRODUSE
+  ADD Cod_produs varchar(6);
+GO
+ --ADAUGARE COD PRODUS LA PRODUSELE EXISTENTE
+  UPDATE PRODUSE
+    SET Cod_produs = (case when IdProdus = 1 then 'a'
+                           when IdProdus = 2 then 'b'
+                           when IdProdus = 3 then 'c'
+						   when IdProdus = 4 then 'd'
+						   when IdProdus = 5 then 'e'
+						   when IdProdus = 6 then 'f'
+						   when IdProdus = 7 then 'g'
+						   when IdProdus = 8 then 'h'
+						   when IdProdus = 9 then 'i'
+						   when IdProdus = 10 then 'j'
+						   when IdProdus = 11 then 'k'
+						   when IdProdus = 12 then 'l'
+						   when IdProdus = 13 then 'm'
+						   when IdProdus = 14 then 'n'
+						   when IdProdus = 15 then 'o'
+						   when IdProdus = 16 then 'p'
+						   when IdProdus = 17 then 'q'
+                    end)
+    WHERE IdProdus in (1, 2, 3,4,5,6,7,8,9,10,11,12,13,14,15,16,17);
+  GO
+
+  -- ADAUGARE CONSTRAINT VALORI UNICE cod produs
+  ALTER TABLE PRODUSE
+    ADD CONSTRAINT UQ_PRODUSE_Cod_produs UNIQUE(Cod_produs);
+  GO
+
+--CONSTRAINT VERIFICARE Tip_cl din tabela clienti
+ALTER TABLE CLIENTI
+  ADD CONSTRAINT CHK_Tip_cl CHECK (Tip_cl='PF' OR Tip_cl='PFA' OR Tip_cl='SRL' OR Tip_cl='SA');
+GO
+  --verificare check constraint
+  --INSERT INTO CLIENTI(Denumire, Adresa_jud, Tip_cl) VALUES ('CichiCean', 'Cluj', 'gjhh');
+
+--contrangere data_vanzarii, nu se pot introduce date din viitor
+ALTER TABLE VANZARI 
+   ADD CONSTRAINT Data_vanz CHECK(DATEDIFF(DAY,GETDATE(),DataVanz)<=0)
+GO
+--VERIFICARE
+--INSERT INTO VANZARI(IDProdus, IDClient, IDVanzator, DataVanz, NrProduse, PretVanz)
+ --VALUES (2, 5, 13, '11/12/2022', 5, 6);
+
+--STERGE CLIENTI DINTR-UN ANUMIT JUDET
+DELETE FROM CLIENTI WHERE Adresa_jud='Bucuresti'
+GO
+  --STERGE VANZARILE EFECTUATE DE CLIENT
+  DELETE FROM VANZARI WHERE IDClient=3
+  GO
+
+--STERGE VANZARI MAI VECHI DE UN AN 
+DELETE FROM VANZARI WHERE (DATEDIFF(DAY,DataVanz,GETDATE())>365)
+GO
+
+--STERGE ANGAJATI DIN DEPARTAMENT PROIECTARE ANGAJATI DUPA 01.01.2018
+DELETE FROM ANGAJATI WHERE(IdDept=3 AND DATEDIFF(DAY,DataAngajarii,'01/01/2018')<0)
+GO
+
+--TRANSFERA ANGAJATI CU VECHIME >5 ANI DIN PRODUCTIE IN VANZARI
+UPDATE ANGAJATI SET IdDept=4 WHERE IdDept=2 AND DATEDIFF(YEAR,DataAngajarii,GETDATE())>5
+GO
+
+--ADAUGARE SECVENTA '-V2' LA DENUMIREA PRODUSULUI CU VALOARE CHEII PRIMARE NR IMP
+UPDATE PRODUSE SET Denumire=CONCAT(Denumire,'-V2') WHERE IdProdus%2=1;
+GO
+
+--PRET VANZARE +10% LA PRODUSELE DIN CATEGORIA ADAPTOSRE VANDUTE DUPA O ANUMITA DATA 
+UPDATE VANZARI SET PretVanz=PretVanz+(0.1*PretVanz) 
+  FROM VANZARI IdProdus, PRODUSE IdCateg
+  WHERE IdCateg=2
+GO

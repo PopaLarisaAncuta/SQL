@@ -1,0 +1,128 @@
+--Popa Larisa-Ancuta--
+use Firma 
+
+  --ACTIVITATI PROPUSE--
+--functie care returneaza angajatii a caror functii contine o secventa de caractere primita ca parametru
+create function dbo.secventaFunctie(@secv varchar(30))
+returns table
+as
+return
+  select A.Nume,A.Prenume,F.Denumire
+  from ANGAJATI A
+     join FUNCTII F on A.IdFunctie=F.IdFunctie
+  where F.Denumire like '%'+ @secv + '%'
+
+select * from secventaFunctie('age')
+
+--functie care returneaza salariile dintr-un departament primit ca parametru/cati angajati beneficiaza de fiecare salariu
+create function dbo.numarSalarii(@departament varchar(30))
+returns table
+as
+return 
+  select F.Salariu, count(A.IdAngajat) NrAngajati
+  from ANGAJATI A
+     join FUNCTII F on A.IdFunctie=F.IdFunctie
+     join DEPARTAMENTE D on A.IdDept=D.IdDept
+  where D.Denumire = @departament
+  group by F.Salariu
+
+select * from numarSalarii('VANZARI')
+
+--functie care returneaza salariul minim si maxim dintr-un departament primit ca parametru
+create function dbo.salariuMinMaxDep(@departament varchar(30))
+returns table 
+as
+return
+  select min(F.Salariu) as salariuMin, max(F.Salariu) as salariuMax
+  from ANGAJATI A
+     join FUNCTII F on A.IdFunctie=F.IdFunctie
+     join DEPARTAMENTE D on A.IdDept=D.IdDept
+  where D.Denumire = @departament
+
+select * from salariuMinMaxDep('VANZARI')
+
+--functie care returneaza produsele vandute intr-o anumita perioadă de timp/limitele perioadei de timp sunt trimise ca parametri către funcție
+create function dbo.produsePerioada(@dataStart date,@dataEnd date)
+returns table
+as 
+return
+  select P.DENUMIRE Produs, V.DataVanz 
+     from VANZARI V
+        join PRODUSE P ON V.IDProdus=P.IdProdus
+     where V.DataVanz BETWEEN @dataStart AND @dataEnd
+
+select * from produsePerioada('12/31/2020','01/01/2022')
+
+--functie care returneaza suma totala incasata de un vanzator al carui nume este trimis ca parametru
+create function dbo.sumaTotalaVanzator(@nume varchar(20),@prenume varchar(20))
+returns int 
+as
+begin 
+  declare @rez int
+
+  select @rez=sum(V.NrProduse*V.PretVanz)
+  from ANGAJATI A
+     JOIN VANZARI V ON A.IdAngajat=V.IDVanzator
+  where A.Nume = @nume and A.Prenume =@prenume
+
+  return (@rez)
+end
+
+print dbo.sumaTotalaVanzator('N13','P9')
+
+--o functie care se bazeaza pe functia anterioara si care verifica daca suma depaseste un anumit prag minim trimis ca parametru
+create function dbo.verifPragSumaTot(@prag int)
+returns bit
+as
+begin 
+  declare @rez bit
+  set @rez = 0
+  if dbo.sumaTotalaVanzator('N13','P9')>@prag
+    set @rez = 1
+
+  return @rez
+end
+
+print dbo.verifPragSumaTot(700)
+
+--afisati angajatii care au vandut produse in valoare mai mare decât 100 RON
+create function dbo.valProduse()
+returns table
+as
+return
+  select A.Nume,A.Prenume
+    from ANGAJATI A
+       JOIN VANZARI V ON A.IdAngajat=V.IDVanzator
+    where V.PretVanz*V.NrProduse>100
+	group by A.IdAngajat,A.Nume,A.Prenume
+
+select * from valProduse()
+
+--functie care returneaza cele mai vândute N produse, intr-o anumita perioadă de timp
+  --valoarea lui N si limitele perioadei de timp sunt trimise ca parametri catre functie
+create function dbo.celeMaiVanduteProduse(@N int,@dataStart date,@dataEnd date)
+returns table
+as 
+return
+  select top(@N) V.IDProdus,P.Denumire,sum(V.NrProduse) cantitate
+    from Vanzari V
+	  JOIN Produse P on V.IDProdus = P.IdProdus
+    where V.DataVanz BETWEEN @dataStart AND @dataEnd
+    group by V.IDProdus,P.Denumire
+    order by sum(V.NrProduse) desc
+
+select * from dbo.celeMaiVanduteProduse(3,'12/31/2016','01/01/2022')
+
+--funcție care returnează clienții ordonați descrescător după sumele cheltuite, într-o anumită perioadă de timp ale cărei limite sunt trimise ca parametri
+create function dbo.ordonareClienti(@dataStart date,@dataEnd date)
+returns table
+as
+return
+  select top 10 V.IDClient, C.Denumire, SUM(V.NrProduse*V.PretVanz) suma
+   from VANZARI V
+      join CLIENTI C on V.IDClient=C.IdClient
+    where V.DataVanz between @dataStart and @dataEnd
+    group by V.IDClient,C.Denumire
+    order by SUM(V.NrProduse*V.PretVanz) desc
+
+select * from dbo.ordonareClienti('12/31/2019','01/01/2022')

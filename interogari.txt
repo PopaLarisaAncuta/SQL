@@ -1,0 +1,119 @@
+--POPA LARISA-ANCUTA
+--LABORATORUL 5
+
+--DIN LABORATOR
+USE Firma
+GO
+CREATE VIEW vAngajati AS
+ SELECT A.IdAngajat, A.Nume, A.Prenume,
+        D.Denumire AS Departament,
+        F.Denumire AS Functie, F.Salariu, A.
+        DataNasterii, A.DataAngajarii
+ FROM Angajati A, Departamente D, Functii F
+ WHERE A.IdDept=D.IdDept AND A.IdFunctie=F.IdFunctie
+GO
+SELECT * FROM vAngajati
+GO
+
+SELECT Nume, Prenume
+FROM vAngajati
+WHERE Departament = 'PRODUCTIE'
+
+SELECT Nume, Prenume, Departament
+FROM vAngajati
+WHERE Departament = 'PROIECTARE'
+ORDER BY Nume, Prenume
+
+SELECT Departament, AVG(Salariu) SalMed
+FROM vAngajati
+GROUP BY Departament
+ORDER BY SalMed DESC
+
+SELECT COUNT(*) NrAng
+FROM vAngajati
+
+  --CERINTE LABORATOR--
+--angajatii dintr-un anumit departament a caror nume contine caracterele 'N1'
+SELECT Nume,Prenume
+  FROM vAngajati
+  WHERE Departament='PROIECTARE' AND Nume LIKE '%N1%'
+
+--angajatii dintr-un anumit departament a caror nume incepe cu caracterele ‘N1’
+SELECT Nume
+  FROM vAngajati
+  WHERE Departament='PROIECTARE' AND Nume LIKE '%N1%'
+
+--angajatii dintr-un anumit departament (dat prin denumire) ordonati după salariu crescator/descrescator
+SELECT Nume,Prenume,Salariu
+  FROM vAngajati
+  ORDER BY Salariu DESC
+
+--cati angajati sunt intr-un anumit departament dat prin denumire
+SELECT COUNT(IdAngajat) NrAngProiectare
+  FROM vAngajati
+  WHERE Departament='PROIECTARE'
+
+--suma salariilor angajatilor din companie
+SELECT SUM(Salariu) TotalSalariu
+  FROM vAngajati
+
+  --CERINTE TEMA--
+--media salariilor de pe un departament specificat prin nume
+SELECT AVG(Salariu) SalariuProiectare
+  FROM vAngajati 
+  WHERE Departament='PROIECTARE'
+
+--mediile salariilor angajatilor grupate pe functii
+SELECT AVG(Salariu) SalariuFunctie
+  FROM vAngajati 
+  GROUP BY Functie
+
+--cel mai mic/mare salariu din companie
+SELECT MAX(Salariu) MaxSalariu, MIN(Salariu) MinSalariu
+  FROM vAngajati 
+
+--cel mai mic/mare salariu dintr-un departament specificat
+SELECT MAX(Salariu) MaxDept
+  FROM vAngajati 
+   WHERE Departament='PROIECTARE'
+
+SELECT MIN(Salariu) MinDept
+  FROM vAngajati 
+   WHERE Departament='PROIECTARE'
+
+--cele mai mici și cele mai mari salarii pe departamente
+SELECT MAX(Salariu) MaxSalariu, MIN(Salariu) MinSalariu
+   FROM vAngajati 
+   GROUP BY Departament
+
+--câți angajați sunt în fiecare departament
+SELECT COUNT(IdAngajat) NrAngDep
+  FROM vAngajati 
+  GROUP BY Departament
+
+--suma salariilor angajaților din fiecare departament
+SELECT SUM(Salariu) SumSalariuDep
+  FROM vAngajati 
+  GROUP BY Departament
+
+--listați angajații, grupati pe departamente și vechimi (rotunjite la an)
+SELECT Departament,Nume,Prenume, DATEDIFF(YEAR,DataAngajarii,GETDATE()) Vechime
+  FROM vAngajati
+  GROUP BY Departament,DATEDIFF(YEAR,DataAngajarii,GETDATE()),Nume,Prenume
+--angajații, grupați pe funcții, ce au o vechime mai mare de 10 ani
+SELECT Functie, Nume,Prenume, DATEDIFF(YEAR,DataAngajarii,GETDATE()) Vechime
+  FROM vAngajati
+  GROUP BY Functie,Nume,Prenume,DATEDIFF(YEAR,DataAngajarii,GETDATE())
+  HAVING DATEDIFF(YEAR,DataAngajarii,GETDATE())>10
+
+--angajații, grupați pe departamente, ce au vârsta de minim 30 ani
+SELECT Departament, Nume,Prenume, DATEDIFF(YEAR,DataNasterii,GETDATE()) Varsta
+  FROM vAngajati
+  GROUP BY Departament,Nume,Prenume,DATEDIFF(YEAR,DataNasterii,GETDATE())
+  HAVING DATEDIFF(YEAR,DataNasterii,GETDATE())>29
+
+--departamentele care au media salariilor mai mare decat 3000 
+SELECT Departament, AVG(Salariu) SalMedDep
+  FROM vAngajati
+  GROUP BY Departament
+  HAVING AVG(Salariu)>3000
